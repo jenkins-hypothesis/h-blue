@@ -1,0 +1,5 @@
+-r requirements.txt
+
+honcho
+pyramid_debugtoolbar
+pip-tools

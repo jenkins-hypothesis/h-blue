@@ -1,0 +1,12 @@
+[run]
+branch = True
+parallel = True
+source =
+    h
+    tests/h
+omit =
+    h/debug.py
+    h/migrations/*
+
+[report]
+show_missing = True

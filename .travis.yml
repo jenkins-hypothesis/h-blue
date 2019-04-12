@@ -1,0 +1,79 @@
+# use Travis container build infrastructure
+sudo: false
+matrix:
+  include:
+    - env: ACTION=checkformatting
+      language: python
+      python: '3.6'
+      install: pip install tox>=3.8.0
+      script:
+        make checkformatting
+
+    # Python (backend) tests
+    - env: ACTION=tox
+      language: python
+      python: '2.7'
+      addons:
+        postgresql: "9.4"
+      before_install:
+        - ./scripts/elasticsearch.sh
+      install: pip install tox>=3.8.0
+      before_script: createdb htest
+      script: tox
+      after_success:
+        make coverage codecov
+
+    - env: ACTION=tox-py3
+      language: python
+      python: '3.6'
+      addons:
+        postgresql: '9.4'
+      before_install:
+        - ./scripts/elasticsearch.sh
+      install: pip install tox>=3.8.0
+      before_script: createdb htest
+      script:
+        tox -e py36-tests
+
+    # Test web application frontend
+    - env: ACTION=gulp
+      language: node_js
+      node_js: 'node'
+      before_install: npm install gulp-cli
+      script: gulp test
+
+    # Lint frontend code
+    - env: ACTION=frontend-lint
+      language: node_js
+      node_js: 'node'
+      script:
+        gulp lint
+
+    # Lint backend code
+    - env: ACTION=backend-lint
+      language: python
+      python: '3.6'
+      install: pip install tox>=3.8.0
+      script:
+        make lint
+
+    # Check the docs build for warnings or errors.
+    - env: ACTION=check-docs
+      language: python
+      python: '3.6'
+      install: pip install tox>=3.8.0
+      script:
+        make checkdocs
+
+cache:
+  directories:
+    - node_modules
+    - $HOME/.cache/pip
+before_cache:
+  - rm -f $HOME/.cache/pip/log/debug.log
+notifications:
+  slack:
+    rooms:
+      - secure: SKPwtfoH32aDop6hLhQdgrUhl58gM6CMBUATMdq0KMmEwCxskPbIArqxGUKxeeiO3c3jBQ+Yuq3b4m8GbR2AJxxelO0DRLNyV1lAjfeJ/QzCc3Taxqo0yel4uAFNg/oCYWH50dv2oAgDP3CHk/tKXmsgDWOjcm6A6k35xst16xI=
+    on_success: change
+    on_failure: always

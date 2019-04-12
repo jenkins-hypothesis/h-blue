@@ -1,0 +1,96 @@
+{%- set nav_pages = [
+    ('index', 'admin.index', 'Home', []),
+
+    ('admins', 'admin.admins', 'Administrators', []),
+    ('badge', 'admin.badge', 'Badge', []),
+    ('features', 'admin.features', 'Feature flags', [
+      ('features', 'admin.features', 'Manage feature flags'),
+      ('cohorts', 'admin.cohorts', 'Manage feature cohorts'),
+    ]),
+    ('groups', 'admin.groups', 'Groups', [
+      ('groups', 'admin.groups', 'List Groups'),
+      ('groups_create', 'admin.groups_create', 'Create a Group'),
+    ]),
+    ('mailer', 'admin.mailer', 'Mailer', []),
+    ('nipsa', 'admin.nipsa', 'NIPSA', []),
+    ('oauth', 'admin.oauthclients', 'OAuth clients', []),
+    ('organizations', 'admin.organizations', 'Organizations', [
+      ('organizations', 'admin.organizations', 'List organizations'),
+      ('organizations_create', 'admin.organizations_create', 'Create an organization'),
+    ]),
+    ('staff', 'admin.staff', 'Staff', []),
+    ('users', 'admin.users', 'Users', []),
+] -%}
+
+{%- set page_id = page_id|default('home') -%}
+{%- set page_title = page_title|default('Administration pages') -%}
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+    <title>
+      Hypothesis: {{ page_title }}
+    </title>
+
+  {% for url in asset_urls("admin_css") %}
+<link rel="stylesheet" href="{{ url }}">
+{% endfor %}
+
+    {% for url in asset_urls("header_js") %}
+    <script src="{{ url }}"></script>
+    {% endfor %}
+
+    {% include 'h:templates/includes/settings.html.jinja2' %}
+  </head>
+  <body>
+    <nav class="admin-navbar">
+      <div class="admin-navbar__container">
+        <a class="admin-navbar__logo-link" href="{{ request.route_url('admin.index') }}">
+          {{ svg_icon('logo', 'admin-navbar__logo') }}
+        </a>
+        <ul class="admin-navbar__tab-list">
+          {% for id, permission, title, children in nav_pages %}
+            {% if request.has_permission(permission) %}
+              {% if not children %}
+                <li class="admin-navbar__tab-item{% if id == page_id %} is-active{% endif %}">
+                  <a class="admin-navbar__tab-link" href="{{ request.route_url(permission) }}">{{ title }}</a>
+                </li>
+              {% else %}
+                <li class="admin-navbar__tab-item dropdown{% if id in page_id %} active{% endif %}">
+                    <a href="#" class="admin-navbar__tab-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                    {{ title }}
+                    <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                      {% for id, url, title in children %}
+                        <li><a href="{{ request.route_url(url) }}">{{ title }}</a></li>
+                      {% endfor %}
+                    </ul>
+                </li>
+              {% endif %}
+            {% endif %}
+          {% endfor %}
+        </ul>
+      </div>
+    </nav>
+
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12 main">
+          {% include "h:templates/includes/flashbar.html.jinja2" %}
+          <h1 class="page-header">{{ page_title }}</h1>
+          {% block content %}{% endblock %}
+        </div>
+      </div>
+    </div>
+
+    {% for url in asset_urls("admin_js") %}
+    <script src="{{ url }}"></script>
+    {% endfor %}
+    {% block scripts %}{% endblock %}
+  </body>
+</html>
